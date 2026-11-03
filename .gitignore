@@ -1,0 +1,8 @@
+# Cache dell'editor Godot: si rigenera da sola
+.godot/
+
+# File di sistema del Mac
+.DS_Store
+
+# NB: la cartella docs/ (il gioco esportato per il web) va invece caricata:
+# è quella che GitHub Pages pubblica.

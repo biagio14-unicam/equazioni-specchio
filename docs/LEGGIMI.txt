@@ -1,0 +1,4 @@
+Questa cartella contiene il gioco esportato per il web (Progetto -> Esporta -> Web).
+GitHub Pages la pubblica così com'è. Non modificare i file a mano: rigenerali da Godot.
+Il file .gdignore dice a Godot di ignorare questa cartella (così non finisce dentro l'export stesso).
+Il file .nojekyll dice a GitHub Pages di pubblicare i file senza elaborarli.

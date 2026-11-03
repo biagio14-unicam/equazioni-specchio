@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/level.gd" id="1_level"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="LeftSide" type="Node2D" parent="."]
+
+[node name="RightSide" type="Node2D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="EquationLabel" type="Label" parent="HUD"]
+
+[node name="StatusLabel" type="Label" parent="HUD"]
