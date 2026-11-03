@@ -6,6 +6,7 @@ extends Node2D
 const UNIT := 26.0          # lato del quadratino
 const UNIT_GAP := 4.0       # spazio tra quadratini sciolti
 const LOOSE_COLS := 5       # quadratini sciolti per riga (a gruppi di 5 si contano a colpo d'occhio)
+const MAX_LOOSE := 20       # oltre questo numero le unità si disegnano come gruppo con disco
 const X_SIZE := 40.0        # lato della x
 const DISC_R := 17.0        # raggio del disco
 const HINGE := 14.0         # lunghezza del cardine
@@ -119,7 +120,7 @@ func _draw() -> void:
 	var x := (w - _top_width()) / 2.0
 
 	# --- riga principale: disco + cardine + base, oppure quadratini sciolti
-	if term.is_x() or term.grouped:
+	if term.is_x() or _as_group():
 		var base_x := x
 		if _has_disc(): # il disco da 1 non si disegna: resta solo la base
 			_draw_disc(Vector2(x + DISC_R, 0), term.count)
@@ -149,14 +150,20 @@ func _draw() -> void:
 
 ## true se il pezzo mostra un disco agganciato (x o unità raggruppate, con disco > 1).
 func _has_disc() -> bool:
-	return (term.is_x() or term.grouped) and term.count > 1
+	return (term.is_x() or _as_group()) and term.count > 1
+
+
+## Unità disegnate come gruppo (unità + disco): se raggruppate dal giocatore,
+## oppure se sono troppe per stare sciolte sullo schermo.
+func _as_group() -> bool:
+	return not term.is_x() and (term.grouped or term.count > MAX_LOOSE)
 
 
 func _top_width() -> float:
 	var disc := DISC_R * 2.0 + HINGE if _has_disc() else 0.0
 	if term.is_x():
 		return disc + X_SIZE
-	if term.grouped:
+	if _as_group():
 		return disc + UNIT
 	var cols := mini(term.count, LOOSE_COLS)
 	return cols * UNIT + (cols - 1) * UNIT_GAP
@@ -170,7 +177,7 @@ func _loose_height() -> float:
 func _top_half_height() -> float:
 	if term.is_x():
 		return X_SIZE / 2.0
-	if term.grouped:
+	if _as_group():
 		return DISC_R if _has_disc() else UNIT / 2.0
 	return _loose_height() / 2.0
 

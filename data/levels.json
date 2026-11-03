@@ -5,22 +5,22 @@
 			"tutorial": true,
 			"levels": [
 				{
-					"equation": "x + 2 = 5", "par": 2, "guided": true,
+					"equation": "x + 2 = 5", "guided": true,
 					"intro_title": "Benvenuto!",
 					"intro": "Lo specchio al centro è l'uguale. Il tuo obiettivo è lasciare da sola la x, il quadrato arancione con il punto interrogativo.\n\nI quadratini verdi sono le unità: pieni valgono +1, vuoti −1.\n\nSegui le frecce: trascina i pezzi con il mouse o con il dito."
 				},
 				{
-					"equation": "2x = 8", "par": 1, "guided": true,
+					"equation": "2x = 8", "guided": true,
 					"intro_title": "Il disco",
 					"intro": "Il disco viola agganciato alla x dice quante x ci sono: qui due.\n\nAfferra il disco e portalo oltre lo specchio: dividerà tutto quello che c'è dall'altra parte."
 				},
 				{
-					"equation": "-x = 4", "par": 1, "guided": true,
+					"equation": "-x = 4", "guided": true,
 					"intro_title": "Ribaltare tutto",
 					"intro": "Una x vuota vale −x: non è ancora la soluzione.\n\nFai doppio clic (o doppio tocco) sullo specchio: tutti i pezzi si ribaltano, da entrambe le parti."
 				},
 				{
-					"equation": "3x + 1 = 7", "par": 3, "guided": true,
+					"equation": "3x + 1 = 7", "guided": true,
 					"intro_title": "Tutto insieme",
 					"intro": "Ora usa tutto quello che hai imparato.\n\nSe ti blocchi, il pulsante Suggerimento ti mostra la mossa successiva, e Annulla torna indietro di una mossa."
 				}
@@ -30,72 +30,74 @@
 			"name": "Lo specchio",
 			"levels": [
 				{
-					"equation": "x + 3 = 5", "par": 2, "guided": true,
+					"patterns": ["x + A = B"], "solution": [1, 9], "guided": true,
 					"intro_title": "Mondo 1: lo specchio",
-					"intro": "Un pezzo che attraversa lo specchio esce invertito: i pieni diventano vuoti e i vuoti diventano pieni.\n\nUn pieno e un vuoto, fusi insieme, si annullano a vicenda."
+					"intro": "Un pezzo che attraversa lo specchio esce invertito: i pieni diventano vuoti e i vuoti diventano pieni.\n\nUn pieno e un vuoto, fusi insieme, si annullano a vicenda.\n\nDa qui in poi le equazioni sono sempre nuove: ogni partita è diversa."
 				},
-				{ "equation": "x - 4 = 2", "par": 2 },
-				{ "equation": "7 = x + 2", "par": 2 },
-				{ "equation": "x + 5 = 1", "par": 2 },
-				{ "equation": "3 - x = 1", "par": 3 }
+				{ "patterns": ["x - A = B", "A + x = B"], "solution": [1, 12] },
+				{ "patterns": ["x + A = B", "A = x + B", "x - A = B"], "solution": [-9, 9] },
+				{ "patterns": ["x + A = B - C", "A + x - B = C", "x - A + B = C"], "solution": [-9, 9], "min_par": 3 },
+				{ "patterns": ["A - x = B", "-x + A = B", "A - x = B - C"], "solution": [-9, 9], "min_par": 3 }
 			]
 		},
 		{
 			"name": "Il gancio",
 			"levels": [
 				{
-					"equation": "2x = 6", "par": 1, "guided": true,
+					"patterns": ["Ax = B"], "solution": [1, 6], "guided": true,
 					"intro_title": "Mondo 2: il gancio",
 					"intro": "Il disco della x, portato oltre lo specchio, divide tutti i termini dall'altra parte.\n\nSe il risultato è una frazione che si può semplificare, fai doppio clic su di essa."
 				},
-				{ "equation": "3x = 12", "par": 1 },
-				{ "equation": "4x = 2", "par": 1 },
-				{ "equation": "-2x = 8", "par": 2 },
-				{ "equation": "2x + 3 = 7", "par": 3 }
+				{ "patterns": ["Ax + B = C", "B + Ax = C"], "solution": [1, 6] },
+				{ "patterns": ["Ax - B = C", "Ax + B = C", "Ax = B"], "solution": [-6, 6], "fraction": true },
+				{ "patterns": ["B - Ax = C", "-Ax + B = C", "-Ax = B"], "solution": [-6, 6] },
+				{ "patterns": ["B - Ax = C", "Ax + B = C - D", "B - Ax + C = D"], "solution": [-6, 6], "fraction": true, "min_par": 3 }
 			]
 		},
 		{
 			"name": "Da entrambi i lati",
 			"levels": [
 				{
-					"equation": "3x = x + 4", "par": 3, "guided": true,
+					"patterns": ["Ax = Bx + C"], "solution": [1, 6], "guided": true, "max_coef": 5,
 					"intro_title": "Mondo 3: x da entrambi i lati",
 					"intro": "Anche le x possono attraversare lo specchio.\n\nPorta tutte le x dalla stessa parte e fondile; le unità vanno dall'altra parte."
 				},
-				{ "equation": "3x - 4 = x + 6", "par": 5 },
-				{ "equation": "5 - 2x = 11", "par": 4 },
-				{ "equation": "4x + 1 = 2x + 9", "par": 5 },
-				{ "equation": "2x - 7 = 5x + 2", "par": 5 }
+				{ "patterns": ["Ax + B = Cx + D", "Ax = Bx + C"], "solution": [1, 6], "max_coef": 5, "min_par": 3 },
+				{ "patterns": ["Ax - B = Cx + D", "B - Ax = Cx - D", "Ax + B = D - Cx"], "solution": [-6, 6], "max_coef": 5 },
+				{ "patterns": ["Ax + B + Cx = Dx + E", "Ax - B = Cx + D - Ex"], "solution": [-6, 6], "max_coef": 4, "distinct": ["A", "C", "E"], "min_par": 4 },
+				{ "patterns": ["Ax + B = Cx + D", "B - Ax = Cx - D", "Ax - B = D - Cx"], "solution": [-6, 6], "fraction": true, "max_coef": 5 }
 			]
 		},
 		{
 			"name": "Le frazioni",
 			"levels": [
 				{
-					"equation": "x/2 = 3", "par": 1, "guided": true,
+					"patterns": ["x/A = B"], "solution": [1, 30], "guided": true, "max_den": 5,
 					"intro_title": "Mondo 4: le frazioni",
 					"intro": "Un disco sotto la barra è un denominatore: il termine è diviso per quel numero.\n\nPortalo oltre lo specchio: tutto quello che c'è dall'altra parte viene moltiplicato per lui."
 				},
-				{ "equation": "3x/4 = 6", "par": 2 },
-				{ "equation": "x/3 + 2 = 4", "par": 3 },
+				{ "patterns": ["Ax/B = C", "x/A + B = C", "x/A - B = C"], "solution": [-20, 20], "max_den": 5, "max_coef": 4 },
+				{ "patterns": ["B - Ax = C/D", "x/A - B = C", "Ax + B = C/D"], "solution": [-6, 6], "fraction": true, "max_den": 4, "max_coef": 4 },
 				{
-					"equation": "x/2 + x/3 = 5", "par": 4, "guided": true,
+					"patterns": ["x/A + x/B = C"], "solution": [1, 30], "distinct": ["A", "B"], "guided": true, "max_den": 5,
 					"intro_title": "Lo stesso denominatore",
 					"intro": "Due frazioni si fondono solo se hanno lo stesso denominatore.\n\nAfferra il denominatore di una e lascialo sull'altra, dalla stessa parte dello specchio: entrambe passeranno al minimo comune multiplo."
 				},
-				{ "equation": "x/4 - 1/2 = 1", "par": 3 }
+				{ "patterns": ["x/A + x/B = C", "x/A - x/B = C", "x/A - B/C = D"], "solution": [-30, 30], "distinct": ["A", "B"], "max_den": 5 }
 			]
 		},
 		{
 			"name": "Casi speciali",
 			"levels": [
 				{
-					"equation": "2x + 3 = 2x + 5", "par": 2, "guided": true,
+					"patterns": ["Ax + B = Ax + C"], "distinct": ["B", "C"], "guided": true,
 					"intro_title": "Mondo 5: casi speciali",
 					"intro": "A volte le x spariscono del tutto.\n\nSe i due membri che restano sono diversi, l'equazione è impossibile: nessun numero funziona. Se sono uguali è indeterminata: va bene qualsiasi numero."
 				},
-				{ "equation": "3x - 1 = 3x - 1", "par": 2 },
-				{ "equation": "x + 4 = 4 + x", "par": 2 }
+				{ "patterns": ["Ax + B = B + Ax", "Ax - B = Ax - B", "B - Ax = -Ax + B"] },
+				{ "patterns": ["Ax + B = Ax + C", "Ax + B = B + Ax", "Ax - B = C + Ax"] },
+				{ "patterns": ["Ax + B + Cx = Cx + Ax + D", "Ax + B - Cx = Ax + B - Cx", "Ax + B = Cx + D"], "solution": [-6, 6], "max_coef": 5 },
+				{ "patterns": ["Ax + B = Cx + D", "Ax + B + Cx = Cx + Ax + D", "Ax - B + C = Ax + C - B", "B - Ax = Cx - D"], "solution": [-6, 6], "max_coef": 5 }
 			]
 		}
 	]

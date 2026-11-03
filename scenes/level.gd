@@ -114,6 +114,7 @@ var _message_serial := 0
 var _par := 0                 # 0 = nessun par (livello aperto direttamente dall'editor)
 var _guided := false          # livello guidato: il suggerimento si vede sempre
 var _completed := false       # risolta: l'input sul campo è bloccato
+var _endless := false         # allenamento libero: dopo la soluzione arriva un'altra equazione
 var _win := {}                # pannello di fine livello (vedi _make_dialog)
 var _intro := {}              # pannello di introduzione
 
@@ -138,15 +139,18 @@ func _ready() -> void:
 	add_child(_hint_layer)
 
 	_build_buttons()
-	_win = _make_dialog(420.0, true, [["Livelli", _go_to_levels], ["Ripeti", _restart], ["Avanti", _go_to_next]])
+	_win = _make_dialog(460.0, true, [["Livelli", _go_to_levels], ["Ripeti", _restart], ["Nuova equazione", _new_equation], ["Avanti", _go_to_next]])
 	_intro = _make_dialog(540.0, false, [["Inizia", _close_intro]])
 
 	# Se arriviamo dalla selezione livelli, l'equazione viene dal file dei livelli.
 	var level: Dictionary = Game.current_level()
 	if not level.is_empty():
-		equation_text = level["equation"]
-		_par = level["par"]
+		var instance := Game.new_instance() # equazione fissa (tutorial) o nuova a caso
+		if not instance.is_empty():
+			equation_text = instance["equation"]
+			_par = instance["par"]
 		_guided = level.get("guided", false)
+		_endless = level.get("endless", false)
 		_title_label.text = level["title"]
 		if level.has("intro"):
 			_intro["title"].text = level.get("intro_title", "")
@@ -777,17 +781,22 @@ func _on_completed() -> void:
 		Equation.Status.IDENTITY:
 			_win["title"].text = "Equazione indeterminata"
 
-	var got := Game.complete_current(eq.move_count, _used_hint) if _par > 0 else 0
-	_win["stars"].stars = got
-	_win["stars"].visible = _par > 0
-	var detail := "%d mosse" % eq.move_count
-	if _par > 0:
-		detail += "  ·  par %d" % _par
-		if _used_hint:
+	var detail := "%d mosse" % eq.move_count + (("  ·  par %d" % _par) if _par > 0 else "")
+	if _endless:
+		Game.endless_solved += 1
+		detail += "\nEquazioni risolte in questo allenamento: %d" % Game.endless_solved
+		_win["stars"].visible = false
+	else:
+		var got := Game.complete_current(eq.move_count, _par, _used_hint) if _par > 0 else 0
+		_win["stars"].stars = got
+		_win["stars"].visible = _par > 0
+		if _par > 0 and _used_hint:
 			detail += "\nHai usato un suggerimento: al massimo 2 stelle."
-		elif got < 3:
+		elif _par > 0 and got < 3:
 			detail += "\nSi può fare con meno mosse: riprova!"
 	_win["detail"].text = detail
+	_win["buttons"]["Ripeti"].visible = not _endless
+	_win["buttons"]["Nuova equazione"].visible = _endless
 	_win["buttons"]["Avanti"].visible = Game.has_next()
 
 	await get_tree().create_timer(0.6).timeout # il tempo di vedere l'ultima animazione
@@ -800,7 +809,18 @@ func _go_to_levels() -> void:
 	get_tree().change_scene_to_file(LEVEL_SELECT_SCENE)
 
 
+## Allenamento libero: un'altra equazione dello stesso tipo, senza uscire dal livello.
+func _new_equation() -> void:
+	var instance := Game.new_instance()
+	if instance.is_empty():
+		return
+	equation_text = instance["equation"]
+	_par = instance["par"]
+	_restart()
+
+
 func _go_to_next() -> void:
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	Game.endless_solved = 0
 	Game.current += 1
 	get_tree().reload_current_scene()

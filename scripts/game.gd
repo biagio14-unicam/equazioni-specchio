@@ -9,6 +9,7 @@ const SAVE_PATH := "user://progress.json"
 var worlds: Array = []        # come nel file: [{name, tutorial?, levels: [...]}]
 var levels: Array = []        # tutti i livelli in fila, con i campi del file più world/number/id/title
 var current := -1             # indice in `levels` del livello in corso (-1 = nessuno)
+var endless_solved := 0       # equazioni risolte nell'allenamento libero in corso
 var _stars := {}              # id del livello -> stelle migliori (1..3)
 
 
@@ -24,13 +25,38 @@ func _ready() -> void:
 			var l: Dictionary = world_levels[n].duplicate()
 			l["world"] = w
 			l["number"] = n + 1
-			l["par"] = int(l.get("par", 0))
 			# id stabile: "T-1" per il tutorial, "1-1" per il Mondo 1... (aggiungere il
 			# tutorial non cambia gli id dei mondi, così i progressi salvati restano validi)
 			l["id"] = "%s-%d" % [_world_code(w), n + 1]
 			l["title"] = "%s · Livello %d" % [world_short_title(w), n + 1]
 			levels.append(l)
+		# Dopo l'ultimo livello di ogni mondo (tranne il tutorial): l'allenamento infinito,
+		# con gli stessi schemi dell'ultimo livello.
+		if not worlds[w].get("tutorial", false) and not world_levels.is_empty():
+			var e: Dictionary = world_levels[-1].duplicate()
+			for k in ["guided", "intro", "intro_title"]:
+				e.erase(k)
+			e["world"] = w
+			e["number"] = world_levels.size() + 1
+			e["endless"] = true
+			e["id"] = "%s-inf" % _world_code(w)
+			e["title"] = "%s · Allenamento libero" % world_short_title(w)
+			levels.append(e)
 	_load_progress()
+
+
+## Prepara una nuova equazione per il livello in corso: fissa (tutorial) o casuale.
+## Restituisce {"equation": testo, "par": mosse minime}.
+func new_instance() -> Dictionary:
+	var level := current_level()
+	if level.is_empty():
+		return {}
+	if level.has("equation"):
+		var eq := Equation.new()
+		eq.load_equation(level["equation"])
+		return {"equation": level["equation"], "par": Solver.min_moves(eq)}
+	EquationGenerator.reseed() # seme preso dall'orologio: ogni volta un'equazione diversa
+	return EquationGenerator.generate(level)
 
 
 ## "Tutorial", "Mondo 1", "Mondo 2"...
@@ -71,9 +97,19 @@ func stars_of(index: int) -> int:
 	return _stars.get(levels[index]["id"], 0)
 
 
-## Giocabile se è il primo, se il precedente è completato o se era già stato completato.
+func is_endless(index: int) -> bool:
+	return levels[index].get("endless", false)
+
+
+## Giocabile se è il primo, se era già stato completato, o se è completato il livello
+## precedente (saltando gli allenamenti: il Mondo 2 si apre finendo il livello 5 del Mondo 1).
 func is_unlocked(index: int) -> bool:
-	return index == 0 or stars_of(index - 1) > 0 or stars_of(index) > 0
+	if index == 0 or stars_of(index) > 0:
+		return true
+	var prev := index - 1
+	while prev >= 0 and is_endless(prev):
+		prev -= 1
+	return prev < 0 or stars_of(prev) > 0
 
 
 static func stars_for(moves: int, par: int) -> int:
@@ -86,11 +122,11 @@ static func stars_for(moves: int, par: int) -> int:
 
 ## Registra il risultato del livello in corso; restituisce le stelle ottenute.
 ## Con un suggerimento usato, al massimo 2 stelle.
-func complete_current(moves: int, used_hint := false) -> int:
+func complete_current(moves: int, par: int, used_hint := false) -> int:
 	var level := current_level()
-	if level.is_empty():
+	if level.is_empty() or level.get("endless", false):
 		return 0
-	var s := stars_for(moves, level["par"])
+	var s := stars_for(moves, par)
 	if used_hint:
 		s = mini(s, 2)
 	if s > _stars.get(level["id"], 0):

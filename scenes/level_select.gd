@@ -34,25 +34,35 @@ func _ready() -> void:
 		column.add_child(_label("Nessun livello caricato: controlla che il file data/levels.json esista.", 18, Color("#A32D2D")))
 		return
 
-	var index := 0
-	for w in Game.worlds.size():
-		column.add_child(_label(Game.world_title(w), 22, COL_TEXT))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		column.add_child(row)
-		for n in Game.worlds[w]["levels"].size():
-			row.add_child(_level_button(index, n + 1))
-			index += 1
+	var row: HBoxContainer = null
+	var last_world := -1
+	for index in Game.levels.size():
+		var level: Dictionary = Game.levels[index]
+		if level["world"] != last_world: # nuovo mondo: titolo e nuova riga di pulsanti
+			last_world = level["world"]
+			column.add_child(_label(Game.world_title(last_world), 22, COL_TEXT))
+			row = HBoxContainer.new()
+			row.add_theme_constant_override("separation", 12)
+			column.add_child(row)
+		row.add_child(_level_button(index, level["number"]))
 
 
 func _level_button(index: int, number: int) -> Button:
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(96, 84)
-	b.text = str(number)
 	b.add_theme_font_size_override("font_size", 26)
 	b.disabled = not Game.is_unlocked(index)
 	b.pressed.connect(_open_level.bind(index))
 
+	if Game.is_endless(index): # allenamento libero: il simbolo ∞, niente stelle
+		b.tooltip_text = "Allenamento libero"
+		var inf := InfinityView.new()
+		inf.color = Color(1, 1, 1, 0.45) if b.disabled else Color("#F5F3EE")
+		inf.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		b.add_child(inf)
+		return b
+
+	b.text = str(number)
 	var stars := StarsView.new()
 	stars.radius = 8.0
 	stars.stars = Game.stars_of(index)
@@ -65,6 +75,7 @@ func _level_button(index: int, number: int) -> Button:
 
 func _open_level(index: int) -> void:
 	Game.current = index
+	Game.endless_solved = 0
 	get_tree().change_scene_to_file(LEVEL_SCENE)
 
 

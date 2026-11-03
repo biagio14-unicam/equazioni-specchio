@@ -27,8 +27,8 @@ static func next_move(eq: Equation) -> Dictionary:
 
 
 ## Il numero minimo di mosse che contano per il par (-1 se non trovato).
-static func min_moves(eq: Equation) -> int:
-	return _search(eq).get("depth", -1)
+static func min_moves(eq: Equation, max_depth := MAX_DEPTH) -> int:
+	return _search(eq, max_depth).get("depth", -1)
 
 
 ## Applica una mossa a un'equazione.
@@ -49,16 +49,16 @@ static func apply(eq: Equation, move: Dictionary) -> Equation.MoveResult:
 ## Ricerca in ampiezza. Semplificare è gratis ma NON obbligatorio (altrimenti
 ## 3x/6 tornerebbe subito x/2 e l'mcm non servirebbe mai): ogni stato viene
 ## esplorato sia così com'è sia semplificato, alla stessa profondità.
-static func _search(eq: Equation) -> Dictionary:
+static func _search(eq: Equation, max_depth := MAX_DEPTH) -> Dictionary:
 	var start := _clone(eq)
 	# Ogni elemento della frontiera: [equazione, prima mossa fatta per arrivarci]
 	var frontier: Array = [[start, {}]]
-	var seen := {start.to_text(): true}
+	var seen := {_key(start): true}
 	var simple := _simplified(start)
 	if simple != null:
 		frontier.append([simple, {"type": "simplify_all"}])
-		seen[simple.to_text()] = true
-	for depth in MAX_DEPTH + 1:
+		seen[_key(simple)] = true
+	for depth in max_depth + 1:
 		var next: Array = []
 		for node in frontier:
 			var e: Equation = node[0]
@@ -72,7 +72,7 @@ static func _search(eq: Equation) -> Dictionary:
 				for variant in [c, _simplified(c)]:
 					if variant == null:
 						continue
-					var key: String = variant.to_text()
+					var key := _key(variant)
 					if not seen.has(key):
 						seen[key] = true
 						next.append([variant, first])
@@ -96,28 +96,55 @@ static func _simplified(eq: Equation) -> Equation:
 static func _moves(eq: Equation) -> Array:
 	var out: Array = []
 	var all := eq.left + eq.right
-	for ta in all:
-		for tb in all:
-			if ta.id == tb.id:
-				continue
-			if ta.base == tb.base and ta.divisor == tb.divisor:
-				out.append({"type": "merge", "a": ta.id, "b": tb.id})
-			# mcm: si trascina un denominatore (a) su un altro termine (b)
-			if ta.divisor > 1 and ta.divisor != tb.divisor:
-				out.append({"type": "slice", "a": ta.id, "b": tb.id})
+	for side in [eq.left, eq.right]:
+		for i in side.size():
+			for j in range(i + 1, side.size()):
+				var ta: EqTerm = side[i]
+				var tb: EqTerm = side[j]
+				if ta.base == tb.base and ta.divisor == tb.divisor:
+					out.append({"type": "merge", "a": ta.id, "b": tb.id})
+				# mcm: si trascina un denominatore (a) su un altro termine (b)
+				if ta.divisor != tb.divisor:
+					if ta.divisor > 1:
+						out.append({"type": "slice", "a": ta.id, "b": tb.id})
+					else:
+						out.append({"type": "slice", "a": tb.id, "b": ta.id})
 	for ta in all:
 		out.append({"type": "across", "a": ta.id})
-	for ta in all:
-		if ta.is_x() and ta.count > 1:
-			out.append({"type": "hook_coefficient", "a": ta.id})
-		if ta.divisor > 1:
-			out.append({"type": "hook_divisor", "a": ta.id})
-	out.append({"type": "flip"})
+	# Regole "da insegnante" che tengono piccola la ricerca:
+	# i ganci si usano quando la x è ormai un pezzo solo (prima si raccolgono le x),
+	# il ribaltamento quando resta una sola x ed è negativa.
+	var xs := all.filter(func(t: EqTerm): return t.is_x())
+	if xs.size() == 1:
+		var tx: EqTerm = xs[0]
+		if tx.count > 1:
+			out.append({"type": "hook_coefficient", "a": tx.id})
+		if tx.divisor > 1:
+			out.append({"type": "hook_divisor", "a": tx.id})
+		if tx.negative:
+			out.append({"type": "flip"})
 	return out
+
+
+## Chiave di uno stato che non dipende dall'ordine dei pezzi né da quale membro
+## sta a sinistra: stati "uguali a meno di spostamenti" vengono esplorati una volta sola.
+static func _key(eq: Equation) -> String:
+	var l := _side_key(eq.left)
+	var r := _side_key(eq.right)
+	return l + "=" + r if l < r else r + "=" + l
+
+
+static func _side_key(side: Array[EqTerm]) -> String:
+	var parts: PackedStringArray = []
+	for t in side:
+		parts.append("%s%d%s/%d" % ["-" if t.negative else "+", t.count, "x" if t.is_x() else "", t.divisor])
+	parts.sort()
+	return ",".join(parts)
 
 
 static func _clone(eq: Equation) -> Equation:
 	var c := Equation.new()
+	c.keep_history = false
 	c.left = Equation._copy_side(eq.left)
 	c.right = Equation._copy_side(eq.right)
 	return c

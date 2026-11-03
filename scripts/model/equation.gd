@@ -41,6 +41,7 @@ var move_count: int = 0
 var _initial_left: Array[EqTerm] = []
 var _initial_right: Array[EqTerm] = []
 var _history: Array = [] # elementi: [copia di left, copia di right, move_count]
+var keep_history := true  # il risolutore lo spegne sulle sue copie: va molto più veloce
 var _next_id: int = 1
 
 
@@ -345,7 +346,8 @@ func _done() -> MoveResult:
 
 
 func _push_history(counts_as_move: bool) -> void:
-	_history.append([_copy_side(left), _copy_side(right), move_count])
+	if keep_history:
+		_history.append([_copy_side(left), _copy_side(right), move_count])
 	if counts_as_move:
 		move_count += 1
 
