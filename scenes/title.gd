@@ -1,6 +1,6 @@
 extends Control
 ## Schermata del titolo: EQUALICEY al centro (le lettere di ALICE in un altro colore),
-## e nei quattro angoli la x, il pulsante di uscita, Alice e un piccolo specchio.
+## il pulsante di uscita in alto a destra, Alice in basso a sinistra e la x in basso a destra.
 ## Tutto è costruito qui nel codice, come nella selezione dei livelli.
 
 const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
@@ -16,12 +16,9 @@ const TITLE_MAX_SIZE := 190
 const TITLE_MAX_WIDTH := 1060.0
 const TITLE_BASELINE := 300.0
 
-const MIRROR_SCALE := 0.42
-
 var _wordmark: Control
 var _font_size := TITLE_MAX_SIZE
 var _alice: AliceView
-var _mirror: MirrorView
 var _x_piece: TermView
 var _exit_note: Label
 
@@ -35,14 +32,13 @@ func _ready() -> void:
 	add_child(stage)
 	stage.add_child(SceneBackground.new())
 
-
 	# in basso a sinistra: Alice
 	_alice = AliceView.new("sinistra")
 	_alice.position = Vector2(150.0, 728.0)
 	stage.add_child(_alice)
 	_alice.set_mood("felice")
 
-	# in alto a sinistra: la x
+	# in basso a destra: la x (position = bordo sinistro e centro verticale del pezzo)
 	var x_term := EqTerm.new()
 	x_term.base = EqTerm.Base.X
 	x_term.grouped = true
@@ -64,7 +60,7 @@ func _ready() -> void:
 	while _font_size > 80 and _title_width(_font_size) > TITLE_MAX_WIDTH:
 		_font_size -= 4
 
-	var subtitle := UIStyle.label("Aiuta Alice a risolvere le equazioni", 34, true, UIStyle.MUTED)
+	var subtitle := UIStyle.label("Aiuta Alice a risolvere le equazioni!", 34, true, UIStyle.MUTED)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.size = Vector2(W, 50)
 	subtitle.position = Vector2(0, TITLE_BASELINE + 22.0)
@@ -126,7 +122,7 @@ static func _spacing(font_size: int) -> float:
 	return font_size * 0.03
 
 
-## Toccando Alice, lo specchio o la x succede qualcosa (solo per divertimento).
+## Toccando Alice o la x succede qualcosa (solo per divertimento).
 func _unhandled_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
@@ -134,8 +130,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	var p := (make_input_local(mb) as InputEventMouse).position
 	if Rect2(_alice.position.x - 100.0, _alice.position.y - 240.0, 200.0, 240.0).has_point(p):
 		_alice.react("sorpresa", 0.8)
-	elif Rect2(_mirror.position, Vector2(1280.0, 720.0) * MIRROR_SCALE).has_point(p) and p.x > 1040.0 and p.y > 400.0:
-		_mirror.flash()
 	elif Rect2(_x_piece.position - Vector2(10, 60), Vector2(120, 120)).has_point(p):
 		var spin := _x_piece.create_tween()
 		spin.tween_property(_x_piece, "scale", Vector2(1.8, 1.8), 0.12)
@@ -144,7 +138,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _play() -> void:
 	_alice.react("felice", 0.3)
-	_mirror.flash()
 	await get_tree().create_timer(0.25).timeout
 	get_tree().change_scene_to_file(LEVEL_SELECT_SCENE)
 
