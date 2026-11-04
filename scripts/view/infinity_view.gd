@@ -2,7 +2,7 @@ class_name InfinityView
 extends Control
 ## Il simbolo ∞ disegnato a mano (la lemniscata), per l'allenamento libero.
 
-var color := Color("#F5F3EE"):
+var color := Color("#2B2440"):
 	set(value):
 		color = value
 		queue_redraw()
@@ -21,4 +21,4 @@ func _draw() -> void:
 		var t := TAU * i / 64.0
 		var d := 1.0 + sin(t) * sin(t)
 		pts.append(c + Vector2(a * cos(t) / d, a * sin(t) * cos(t) / d))
-	draw_polyline(pts, color, 3.0, true)
+	draw_polyline(pts, color, 6.0, true)

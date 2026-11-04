@@ -6,7 +6,7 @@ extends Node
 const LEVELS_PATH := "res://data/levels.json"
 const SAVE_PATH := "user://progress.json"
 
-var worlds: Array = []        # come nel file: [{name, tutorial?, levels: [...]}]
+var worlds: Array = []        # come nel file: [{name, character, character_name, tutorial?, levels: [...]}]
 var levels: Array = []        # tutti i livelli in fila, con i campi del file più world/number/id/title
 var current := -1             # indice in `levels` del livello in corso (-1 = nessuno)
 var endless_solved := 0       # equazioni risolte nell'allenamento libero in corso
@@ -71,6 +71,28 @@ func world_title(w: int) -> String:
 	if worlds[w].get("tutorial", false):
 		return "Tutorial"
 	return "Mondo %d · %s" % [_world_number(w), worlds[w]["name"]]
+
+
+## L'icona del personaggio del mondo (assets/characters/<character>.png), oppure null.
+func character_texture(w: int) -> Texture2D:
+	var id: String = worlds[w].get("character", "")
+	var path := "res://assets/characters/%s.png" % id
+	if id == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path)
+
+
+## "Il Bianconiglio"... (se manca, il nome del mondo).
+func character_name(w: int) -> String:
+	return worlds[w].get("character_name", worlds[w]["name"])
+
+
+## Il primo livello del mondo w è sbloccato?
+func is_world_unlocked(w: int) -> bool:
+	for i in levels.size():
+		if levels[i]["world"] == w:
+			return is_unlocked(i)
+	return false
 
 
 func _world_number(w: int) -> int:

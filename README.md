@@ -1,4 +1,4 @@
-# Equazioni allo specchio
+# Equalicey · Equazioni allo specchio
 
 Puzzle game educativo 2D sulle equazioni di primo grado, fatto con Godot 4.3 in GDScript.
 Pensato per il web (GitHub Pages), giocabile con mouse, dito o penna della LIM.
@@ -8,7 +8,11 @@ Pensato per il web (GitHub Pages), giocabile con mouse, dito o penna della LIM.
 ```
 equazioni-specchio/
 ├── project.godot              renderer Compatibility, autoload Game, scena principale
-├── data/levels.json           i livelli: mondi, equazioni, par, introduzioni
+├── data/levels.json           i livelli: mondi, schemi delle equazioni, introduzioni
+├── assets/
+│   ├── fonts/                 Fredoka (titoli) e Nunito (testi), licenza SIL OFL
+│   ├── alice/                 le due Alice, 4 espressioni ciascuna (PNG a doppia risoluzione)
+│   └── characters/            i volti dei personaggi dei mondi (un PNG per mondo)
 ├── scripts/
 │   ├── game.gd                autoload "Game": livelli, livello in corso, salvataggio
 │   ├── model/                 la logica, NON disegna nulla
@@ -17,11 +21,19 @@ equazioni-specchio/
 │   │   ├── equation.gd        Equation: parser, mosse, annulla, stato
 │   │   ├── solver.gd          Solver: mossa migliore (suggerimento) e par
 │   │   └── generator.gd       EquationGenerator: equazioni casuali dagli schemi
+│   ├── ui/
+│   │   ├── ui_style.gd        UIStyle: colori, caratteri, stili di pulsanti e riquadri
+│   │   ├── icon_button.gd     IconButton: pulsanti tondi con icona
+│   │   └── speech_bubble.gd   SpeechBubble: il fumetto di Alice
 │   └── view/
+│       ├── scene_background.gd  i due mondi e la scacchiera in prospettiva
+│       ├── mirror_view.gd     lo specchio-portale (bagliore, increspature)
+│       ├── alice_view.gd      un'Alice: espressioni, respiro, saltello
 │       ├── term_view.gd       TermView: disegna un pezzo, evidenziazione
 │       ├── stars_view.gd      StarsView: le tre stelle
 │       └── infinity_view.gd   InfinityView: il simbolo ∞
 ├── scenes/
+│   ├── title.*                schermata del titolo (scena principale)
 │   ├── level_select.*         selezione dei livelli
 │   ├── level.*                il livello: specchio, gesti, animazioni, pannelli
 │   └── term_preview.*         anteprima di tutti i tipi di pezzo
@@ -29,12 +41,20 @@ equazioni-specchio/
 └── tools/check_levels.gd      prova gli schemi di ogni livello
 ```
 
+## Grafica
+
+Direzione "cartoon morbido": tutto è disegnato da codice tranne le Alice e i font.
+Colori e caratteri si cambiano in `scripts/ui/ui_style.gd`. I pezzi sono dimensionati
+per il tocco su smartphone in orizzontale; se un membro non ci sta, si rimpiccioliscono.
+Le Alice sono un disegno originale ispirato alle incisioni di Tenniel (pubblico dominio).
+
 ## Gesti
 
 | gesto | effetto |
 |---|---|
 | trascina un pezzo oltre lo specchio | cambia lato, base invertita |
 | trascina un pezzo su un altro (stessa parte) | si fondono |
+| trascina un pezzo sul suo gemello identico oltre lo specchio | spariscono entrambi |
 | trascina il disco della x oltre lo specchio | gancio: divide tutto il resto |
 | trascina il denominatore oltre lo specchio | gancio: moltiplica tutto il resto |
 | trascina il denominatore su un altro termine (stessa parte) | stesso denominatore (mcm) |
@@ -60,6 +80,10 @@ nuovi (seme preso dall'orologio):
   equazioni troppo facili), `"max_coef"`, `"max_const"`, `"max_den"`.
 - Il par (mosse minime) è calcolato dal risolutore su ogni equazione generata.
 - Livelli a equazione fissa (il tutorial): `{ "equation": "x + 2 = 5" }`.
+- Ogni mondo ha un personaggio: `"character": "bianconiglio"` (il file
+  `assets/characters/bianconiglio.png`) e `"character_name": "Il Bianconiglio"`.
+  Il volto compare nella selezione livelli, nel riquadro in alto a destra del livello
+  e nell'introduzione del primo livello del mondo.
 - Altri campi: `"guided": true` (suggerimento sempre visibile), `"intro_title"` e
   `"intro"` (riquadro iniziale). Un mondo con `"tutorial": true` non ha numero né allenamento.
 - Dopo l'ultimo livello di ogni mondo c'è l'**allenamento libero** (∞): stessi schemi

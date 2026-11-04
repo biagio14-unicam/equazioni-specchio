@@ -12,6 +12,7 @@ func _ready() -> void:
 	_test_impossible()
 	_test_identity()
 	_test_errors_grouping_undo()
+	_test_cancel_twins()
 	print("")
 	if _failures == 0:
 		print("Tutti i test superati.")
@@ -136,4 +137,23 @@ func _test_errors_grouping_undo() -> void:
 	_check(not eq.load_equation("2x + = 7"), "rifiuta 2x + = 7")
 	_check(not eq.load_equation("2x + 3"), "rifiuta senza uguale")
 	_check(not eq.load_equation("x/0 = 1"), "rifiuta divisore zero")
+	print("    ok")
+
+
+func _test_cancel_twins() -> void:
+	print("7) elimina i gemelli")
+	var eq := _new_eq("2x + 3 = 2x + 5") # 1=2x 2=3 | 3=2x 4=5
+	_check(eq.cancel(1, 2) == Equation.MoveResult.SAME_SIDE, "stessa parte")
+	_check(eq.cancel(2, 4) == Equation.MoveResult.NOT_TWINS, "3 e 5 non sono gemelli")
+	_check(eq.cancel(1, 3) == Equation.MoveResult.SUCCESS, "elimina 2x")
+	_check(eq.move_count == 1, "conta come una mossa")
+	_check(eq.get_status() == Equation.Status.IMPOSSIBLE, "3 = 5 impossibile")
+	_check(eq.undo() and eq.to_text() == "2x + 3 = 2x + 5", "annulla")
+	var e2 := Equation.new()
+	e2.load_equation("x - 4 = 7 - 4") # 1=x 2=-4 | 3=7 4=-4
+	_check(Solver.min_moves(e2) == 1, "par 1 con i gemelli")
+	_check(Solver.next_move(e2).get("type") == "cancel", "il suggerimento propone i gemelli")
+	var e3 := Equation.new()
+	e3.load_equation("x + 4 = 7 - 4")
+	_check(e3.cancel(2, 4) == Equation.MoveResult.NOT_TWINS, "+4 e -4 non sono gemelli")
 	print("    ok")

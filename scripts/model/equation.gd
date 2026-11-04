@@ -23,6 +23,8 @@ enum MoveResult {
 	NOTHING_TO_HOOK,   ## gancio: non c'è un disco da spostare
 	NOT_REDUCIBLE,     ## semplifica: la frazione è già ridotta
 	NOTHING_TO_FLIP,   ## ribalta: equazione vuota
+	SAME_SIDE,         ## elimina: i due pezzi stanno dalla stessa parte
+	NOT_TWINS,         ## elimina: i due pezzi non sono identici
 }
 
 enum Status {
@@ -176,6 +178,33 @@ func merge(a: int, b: int) -> MoveResult:
 		ta.count = absi(total)
 		ta.grouped = ta.grouped or tb.grouped # sciolte su gruppo = assorbi
 	return _done()
+
+
+## Elimina i gemelli: lo stesso pezzo (stessa base, stesso segno, stesso valore)
+## da tutte e due le parti dello specchio sparisce da entrambe.
+## È come sottrarre (o sommare) lo stesso termine ai due membri.
+func cancel(a: int, b: int) -> MoveResult:
+	var fa := _find(a)
+	var fb := _find(b)
+	if fa.is_empty() or fb.is_empty():
+		return MoveResult.UNKNOWN_TERM
+	if a == b:
+		return MoveResult.SAME_TERM
+	if is_same(fa["side"], fb["side"]):
+		return MoveResult.SAME_SIDE
+	if not are_twins(fa["term"], fb["term"]):
+		return MoveResult.NOT_TWINS
+	_push_history(true)
+	fa["side"].erase(fa["term"])
+	fb["side"].erase(fb["term"])
+	return _done()
+
+
+## Due pezzi identici: stessa base, stesso segno, stesso valore
+## (sciolti o raggruppati non importa: è solo il modo di disegnarli).
+static func are_twins(ta: EqTerm, tb: EqTerm) -> bool:
+	return ta.base == tb.base and ta.negative == tb.negative \
+		and ta.count == tb.count and ta.divisor == tb.divisor
 
 
 ## Affetta: porta due frazioni allo stesso divisore (mcm).

@@ -5,7 +5,7 @@ extends RefCounted
 ## e al calcolo del par (tools/compute_par.gd).
 ##
 ## Una mossa è un dizionario: {"type": ..., "a": id, "b": id}
-##   type = "across", "flip", "merge", "slice", "hook_coefficient",
+##   type = "across", "cancel", "flip", "merge", "slice", "hook_coefficient",
 ##          "hook_divisor", "simplify"
 ## Le mosse gratuite (semplifica) non contano: nella ricerca si applicano da sole.
 
@@ -37,6 +37,7 @@ static func apply(eq: Equation, move: Dictionary) -> Equation.MoveResult:
 	var b: int = move.get("b", 0)
 	match move["type"]:
 		"across": return eq.move_across(a)
+		"cancel": return eq.cancel(a, b)
 		"flip": return eq.flip_all()
 		"merge": return eq.merge(a, b)
 		"slice": return eq.slice_common(a, b)
@@ -92,10 +93,15 @@ static func _simplified(eq: Equation) -> Equation:
 
 ## Tutte le mosse da provare (quelle non valide vengono scartate da `apply`).
 ## L'ordine conta: a parità di mosse, il suggerimento preferisce le prime della lista
-## (prima fondere e affettare, poi spostare, poi agganciare, per ultimo ribaltare).
+## (prima eliminare i gemelli, poi fondere e affettare, poi spostare, poi agganciare, per ultimo ribaltare).
 static func _moves(eq: Equation) -> Array:
 	var out: Array = []
 	var all := eq.left + eq.right
+	# gemelli: lo stesso pezzo da tutte e due le parti (a si trascina su b)
+	for ta in eq.left:
+		for tb in eq.right:
+			if Equation.are_twins(ta, tb):
+				out.append({"type": "cancel", "a": ta.id, "b": tb.id})
 	for side in [eq.left, eq.right]:
 		for i in side.size():
 			for j in range(i + 1, side.size()):

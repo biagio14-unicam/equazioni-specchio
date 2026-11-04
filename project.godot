@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Equazioni allo specchio"
-run/main_scene="res://scenes/level_select.tscn"
+config/name="Equalicey"
+run/main_scene="res://scenes/title.tscn"
 config/features=PackedStringArray("4.3")
 
 [autoload]

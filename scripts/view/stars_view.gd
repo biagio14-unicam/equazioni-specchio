@@ -2,8 +2,8 @@ class_name StarsView
 extends Control
 ## Tre stelle disegnate a mano (niente caratteri speciali: sul web potrebbero mancare nel font).
 
-const COL_ON := Color("#EF9F27")
-const COL_OFF := Color("#D3D1C7")
+const COL_ON := Color("#FFC21A")
+const COL_OFF := Color("#D9D0F5")
 
 ## Quante stelle accendere (0..3).
 var stars := 0:
@@ -35,3 +35,5 @@ func _draw() -> void:
 			var a := -PI / 2.0 + k * PI / 5.0
 			pts.append(c + Vector2(cos(a), sin(a)) * r)
 		draw_colored_polygon(pts, COL_ON if i < stars else COL_OFF)
+		pts.append(pts[0])
+		draw_polyline(pts, UIStyle.INK, maxf(1.5, radius * 0.12), true) # contorno, come tutti i pezzi
